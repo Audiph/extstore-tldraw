@@ -1,0 +1,48 @@
+{
+	"manifest_version": "ext-v1",
+	"name": "TLDraw Extension",
+	"version": "1.0.0",
+	"short_name": "tldraw-ext",
+	"description": "tldraw is a collaborative digital whiteboard available at tldraw.com. Its editor, user interface, and other underlying libraries are open source and available in this repository. They are also distributed on npm. You can use tldraw to create a drop-in whiteboard for your product or as the foundation on which to build your own infinite canvas applications.",
+	"author": "EXT, Inc.",
+	"homepage_url": "https://github.com/tldraw/tldraw",
+	"icons": {
+		"128": "icons/icon-1024.png",
+		"background": "icons/icon-background.png",
+		"banner": "icons/icon-banner.png",
+		"128-dark": "icons/icon-128-dark.png",
+		"background-dark": "icons/icon-background-dark.png",
+		"banner-dark": "icons/icon-banner-dark.png"
+	},
+	"scripts": ["main.js"],
+	"modules": {
+		"console": {
+			"module_version": "1.0.1",
+			"permissions": ["*"]
+		},
+		"runtime": {
+			"module_version": "1.2.2",
+			"permissions": ["*"]
+		},
+		"tabs": {
+			"module_version": "1.1.0",
+			"permissions": ["*"]
+		},
+		"timers": {
+			"module_version": "1.0.1",
+			"permissions": ["*"]
+		},
+		"windows": {
+			"module_version": "1.2.0",
+			"permissions": ["*"]
+		},
+		"webviews": {
+			"module_version": "1.0.2",
+			"permissions": ["*"]
+		},
+		"websessions": {
+			"module_version": "1.0.1",
+			"permissions": ["*"]
+		}
+	}
+}
