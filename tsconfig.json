@@ -5,9 +5,9 @@
     "noImplicitThis": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "module": "es6",
-    "target": "es5",
     "allowJs": true,
+    "module": "commonjs",
+    "lib": ["ES6"],
     "types": [
       "@extpkg/types-console",
       "@extpkg/types-runtime",
@@ -17,5 +17,5 @@
       "@extpkg/types-websessions"
     ]
   },
-  "files": ["src/main.ts"]
+  "files": ["src/main.ts", "src/utils.ts"]
 }

@@ -6,7 +6,10 @@ const CopyPlugin = require('copy-webpack-plugin');
 const isProduction = process.env.NODE_ENV == 'production';
 
 const config = {
-  entry: './src/main.ts',
+  entry: {
+    main: './src/main.ts',
+    utils: './src/utils.ts',
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
   },
