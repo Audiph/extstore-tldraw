@@ -2,14 +2,16 @@ import { getItem } from "./utils"
 
 let tabs: ext.tabs.Tab[] = []
 let windows: ext.windows.Window[] = []
-let webviews: ext.webviews.Webview | null = null
+let webviews: ext.webviews.Webview[] = []
+let websessions: ext.websessions.Websession[] = []
 
-ext.runtime.onEnable.addListener(() => {
-  console.log('enabled');
-  tabs = [] 
-  windows = [] 
-  webviews = null
-})
+
+// ext.runtime.onEnable.addListener(() => {
+//   console.log('enabled');
+//   tabs = [] 
+//   windows = [] 
+//   webview = null
+// })
 
 ext.runtime.onExtensionClick.addListener(async () => {
   const newTab = await ext.tabs.create({
@@ -29,15 +31,25 @@ ext.runtime.onExtensionClick.addListener(async () => {
     darkMode: 'platform'
   })
 
+  const newWebsession = await ext.websessions.create({
+    partition: newWindow.id,
+    persistent: true,
+    global: false,
+    cache: true
+  })
+
   const newWindowSize = await ext.windows.getContentSize(newWindow.id)
 
   const newWebview = await ext.webviews.create({
     window: newWindow,
+    websession: newWebsession,
     bounds: { x: 0, y: 0, width: newWindowSize.width, height: newWindowSize.height },
     autoResize: { width: true, height: true }
   })
   tabs.push(newTab)
   windows.push(newWindow)
+  websessions.push(newWebsession)
+  webviews.push(newWebview)
 
   await ext.webviews.loadFile(newWebview.id, 'index.html')
 })
