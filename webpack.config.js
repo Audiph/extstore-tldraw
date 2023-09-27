@@ -13,7 +13,7 @@ const config = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: 'src/assets', to: 'assets' },
+        { from: 'src/icons', to: 'icons' },
         { from: 'src/manifest.json', to: 'manifest.json' },
         { from: 'src/index.html', to: 'index.html' },
         { from: 'src/static', to: 'static' },
