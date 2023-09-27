@@ -2,9 +2,13 @@ import { getItem } from "./utils"
 
 let tabs: ext.tabs.Tab[] = []
 let windows: ext.windows.Window[] = []
+let webviews: ext.webviews.Webview | null = null
 
 ext.runtime.onEnable.addListener(() => {
-  console.log('Extension Enabled')
+  console.log('enabled');
+  tabs = [] 
+  windows = [] 
+  webviews = null
 })
 
 ext.runtime.onExtensionClick.addListener(async () => {
@@ -24,8 +28,18 @@ ext.runtime.onExtensionClick.addListener(async () => {
     vibrancy: false,
     darkMode: 'platform'
   })
+
+  const newWindowSize = await ext.windows.getContentSize(newWindow.id)
+
+  const newWebview = await ext.webviews.create({
+    window: newWindow,
+    bounds: { x: 0, y: 0, width: newWindowSize.width, height: newWindowSize.height },
+    autoResize: { width: true, height: true }
+  })
   tabs.push(newTab)
   windows.push(newWindow)
+
+  await ext.webviews.loadFile(newWebview.id, 'index.html')
 })
 
 ext.tabs.onClickedClose.addListener(async (event) => {
