@@ -27,12 +27,16 @@ ext.runtime.onExtensionClick.addListener(async () => {
     title: newTab.text,
     icon: 'icons/icon-1024.png',
     darkMode: 'platform',
+    minHeight: 530,
+    minWidth: 600,
   });
 
   tabWindowIds.push(findMissing(tabWindowIds, tabWindowIds.length));
   const newWindowSize = await ext.windows.getContentSize(newWindow.id);
 
   console.log(tabWindowIds);
+
+  const isDarkMode = await ext.windows.getPlatformDarkMode();
 
   if (websession) {
     webview = await ext.webviews.create({
@@ -50,6 +54,17 @@ ext.runtime.onExtensionClick.addListener(async () => {
     windows.push(newWindow);
 
     await ext.webviews.loadFile(webview.id, 'index.html');
+    if (!isDarkMode) {
+      await ext.webviews.executeJavaScript(
+        webview.id,
+        `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
+      );
+    } else {
+      await ext.webviews.executeJavaScript(
+        webview.id,
+        `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
+      );
+    }
     console.log('existing');
     return;
   }
@@ -87,7 +102,19 @@ ext.runtime.onExtensionClick.addListener(async () => {
   windows.push(newWindow);
 
   await ext.webviews.loadFile(webview.id, 'index.html');
+  if (!isDarkMode) {
+    await ext.webviews.executeJavaScript(
+      webview.id,
+      `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
+    );
+  } else {
+    await ext.webviews.executeJavaScript(
+      webview.id,
+      `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
+    );
+  }
   console.log('new');
+  console.log(tabWindowIds);
 });
 
 ext.tabs.onClickedClose.addListener(async (event) => {
@@ -133,8 +160,28 @@ ext.windows.onClosed.addListener(async (event) => {
     );
     await ext.tabs.remove(getTab.id);
   }
+  console.log(tabWindowIds);
 });
 
-ext.webviews.onCreated.addListener(async (event, webview) => {
-  console.log(await ext.webviews.getURL(webview.id));
+ext.windows.onUpdatedDarkMode.addListener(async (event, details) => {
+  console.log('theme changes: ', event, details);
+  const getWebview = (await ext.webviews.query()).find(
+    (webview) => webview.id === event.id
+  ) as ext.webviews.Webview;
+  const getWindow = (await ext.windows.query()).find(
+    (webview) => webview.id === event.id
+  ) as ext.windows.Window;
+  if (details.enabled) {
+    await ext.windows.setIcon(getWindow.id, 'icons/icon-1024.png');
+    await ext.webviews.executeJavaScript(
+      getWebview.id,
+      `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
+    );
+  } else {
+    await ext.windows.setIcon(getWindow.id, 'icons/icon-128-dark.png');
+    await ext.webviews.executeJavaScript(
+      getWebview.id,
+      `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
+    );
+  }
 });
