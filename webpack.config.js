@@ -8,9 +8,9 @@ const isProduction = process.env.NODE_ENV == 'production';
 const config = {
   entry: {
     main: './src/main.ts',
-    utils: './src/utils.ts',
   },
   output: {
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
   },
   plugins: [

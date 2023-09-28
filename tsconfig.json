@@ -17,5 +17,5 @@
       "@extpkg/types-websessions"
     ]
   },
-  "files": ["src/main.ts", "src/common/utils.ts"]
+  "include": ["src/**/*.ts"]
 }
