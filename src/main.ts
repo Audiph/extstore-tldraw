@@ -1,4 +1,9 @@
-import { changeTLDrawTheme, findMissingId, getItem } from './common/utils';
+import {
+  changeTLDrawTheme,
+  createWebview,
+  findMissingId,
+  getItem,
+} from './common/utils';
 
 let tabWindowIds: Array<number> = [];
 let tabs: ext.tabs.Tab[] = [];
@@ -32,18 +37,7 @@ ext.runtime.onExtensionClick.addListener(async () => {
 
   if (websession) {
     // Supposedly reusing websession so that the data persist but apparently it's not working
-    webview = await ext.webviews.create({
-      window: newWindow,
-      websession: websession,
-      bounds: {
-        x: 0,
-        y: 0,
-        width: newWindowSize.width,
-        height: newWindowSize.height,
-      },
-      autoResize: { width: true, height: true },
-      javascript: true,
-    });
+    webview = await createWebview(newWindow, newWindowSize, websession);
     tabs.push(newTab);
     windows.push(newWindow);
     await ext.webviews.loadFile(webview.id, 'index.html');
@@ -59,18 +53,7 @@ ext.runtime.onExtensionClick.addListener(async () => {
   });
 
   // create new webview
-  webview = await ext.webviews.create({
-    window: newWindow,
-    websession: websession,
-    bounds: {
-      x: 0,
-      y: 0,
-      width: newWindowSize.width,
-      height: newWindowSize.height,
-    },
-    autoResize: { width: true, height: true },
-    javascript: true,
-  });
+  webview = await createWebview(newWindow, newWindowSize, websession);
 
   // Trying to setup Cookies and attach it for the websession if ever it's going to work. But, it's not :<
   await ext.websessions.setUserAgent(websession.id, `Agent #${websession.id}`);

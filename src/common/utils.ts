@@ -1,11 +1,13 @@
+import { ExtApiTypes, ExtEventTypes } from './types';
+
 /** Gets item needed to be used
  *  @param items Array of Objects to choose from
  *  @param target item to get
  */
 export const getItem = (
-  items: ext.tabs.Tab[] | ext.windows.Window[],
-  target: ext.tabs.TabEvent | ext.windows.WindowEvent
-): ext.tabs.Tab | ext.windows.Window | undefined => {
+  items: ExtApiTypes[],
+  target: ExtEventTypes
+): ExtApiTypes | undefined => {
   return items.find((item) => item.id === target.id);
 };
 
@@ -60,4 +62,24 @@ export const changeTLDrawTheme = async (
       });
     `
   );
+};
+
+// function to create new webview
+export const createWebview = async (
+  window: ext.windows.Window,
+  windowSize: ext.windows.Size,
+  websession: ext.websessions.Websession
+): Promise<ext.webviews.Webview> => {
+  return await ext.webviews.create({
+    window: window,
+    websession: websession,
+    bounds: {
+      x: 0,
+      y: 0,
+      width: windowSize.width,
+      height: windowSize.height,
+    },
+    autoResize: { width: true, height: true },
+    javascript: true,
+  });
 };
