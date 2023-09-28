@@ -1,17 +1,10 @@
-import { findMissing, getItem } from './utils';
+import { changeTLDrawTheme, findMissing, getItem } from './utils';
 
 let tabWindowIds: Array<number> = [];
 let tabs: ext.tabs.Tab[] = [];
 let windows: ext.windows.Window[] = [];
 let webview: ext.webviews.Webview | null = null;
 let websession: ext.websessions.Websession | null = null;
-
-// ext.runtime.onEnable.addListener(() => {
-//   console.log('enabled');
-//   tabs = []
-//   windows = []
-//   webview = null
-// })
 
 ext.runtime.onExtensionClick.addListener(async () => {
   const newTab = await ext.tabs.create({
@@ -26,15 +19,12 @@ ext.runtime.onExtensionClick.addListener(async () => {
   const newWindow = await ext.windows.create({
     title: newTab.text,
     icon: 'icons/icon-1024.png',
-    darkMode: 'platform',
     minHeight: 530,
     minWidth: 600,
   });
 
   tabWindowIds.push(findMissing(tabWindowIds, tabWindowIds.length));
   const newWindowSize = await ext.windows.getContentSize(newWindow.id);
-
-  const isDarkMode = await ext.windows.getPlatformDarkMode();
 
   if (websession) {
     webview = await ext.webviews.create({
@@ -47,6 +37,7 @@ ext.runtime.onExtensionClick.addListener(async () => {
         height: newWindowSize.height,
       },
       autoResize: { width: true, height: true },
+      javascript: true,
     });
     tabs.push(newTab);
     windows.push(newWindow);
@@ -71,6 +62,7 @@ ext.runtime.onExtensionClick.addListener(async () => {
       height: newWindowSize.height,
     },
     autoResize: { width: true, height: true },
+    javascript: true,
   });
 
   await ext.websessions.setUserAgent(websession.id, `Agent #${websession.id}`);
@@ -140,39 +132,18 @@ ext.windows.onUpdatedDarkMode.addListener(async (event, details) => {
   const getWindow = (await ext.windows.query()).find(
     (window) => window.id === event.id
   ) as ext.windows.Window;
-  if (details.enabled) {
-    await ext.windows.setIcon(getWindow.id, 'icons/icon-128-dark.png');
-    await ext.webviews.executeJavaScript(
-      getWebview.id,
-      `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
-    );
-  } else {
-    await ext.windows.setIcon(getWindow.id, 'icons/icon-1024.png');
-    await ext.webviews.executeJavaScript(
-      getWebview.id,
-      `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
-    );
-  }
+  changeTLDrawTheme(details.enabled, getWindow, getWebview);
 });
 
-ext.webviews.onCreated.addListener(async (event, details) => {
+ext.webviews.onLoadFinished.addListener(async (event) => {
   const isDarkMode = await ext.windows.getPlatformDarkMode();
-  console.log('webview created: ', event, details);
-  console.log(isDarkMode);
+  const getWebview = (await ext.webviews.query()).find(
+    (webview) => webview.id === event.id
+  ) as ext.webviews.Webview;
+  console.log('webview created: ', event);
   const getWindow = (await ext.windows.query()).find(
     (window) => window.id === event.id
   ) as ext.windows.Window;
-  if (isDarkMode) {
-    await ext.windows.setIcon(getWindow.id, 'icons/icon-1024.png');
-    await ext.webviews.executeJavaScript(
-      details.id,
-      `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
-    );
-  } else {
-    await ext.windows.setIcon(getWindow.id, 'icons/icon-128-dark.png');
-    await ext.webviews.executeJavaScript(
-      details.id,
-      `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
-    );
-  }
+  await ext.webviews.startPainting(getWebview.id);
+  changeTLDrawTheme(isDarkMode, getWindow, getWebview);
 });
