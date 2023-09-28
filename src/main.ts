@@ -34,8 +34,6 @@ ext.runtime.onExtensionClick.addListener(async () => {
   tabWindowIds.push(findMissing(tabWindowIds, tabWindowIds.length));
   const newWindowSize = await ext.windows.getContentSize(newWindow.id);
 
-  console.log(tabWindowIds);
-
   const isDarkMode = await ext.windows.getPlatformDarkMode();
 
   if (websession) {
@@ -52,20 +50,7 @@ ext.runtime.onExtensionClick.addListener(async () => {
     });
     tabs.push(newTab);
     windows.push(newWindow);
-
     await ext.webviews.loadFile(webview.id, 'index.html');
-    if (!isDarkMode) {
-      await ext.webviews.executeJavaScript(
-        webview.id,
-        `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
-      );
-    } else {
-      await ext.webviews.executeJavaScript(
-        webview.id,
-        `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
-      );
-    }
-    console.log('existing');
     return;
   }
 
@@ -102,19 +87,6 @@ ext.runtime.onExtensionClick.addListener(async () => {
   windows.push(newWindow);
 
   await ext.webviews.loadFile(webview.id, 'index.html');
-  if (!isDarkMode) {
-    await ext.webviews.executeJavaScript(
-      webview.id,
-      `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
-    );
-  } else {
-    await ext.webviews.executeJavaScript(
-      webview.id,
-      `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
-    );
-  }
-  console.log('new');
-  console.log(tabWindowIds);
 });
 
 ext.tabs.onClickedClose.addListener(async (event) => {
@@ -125,7 +97,6 @@ ext.tabs.onClickedClose.addListener(async (event) => {
     // remove (delete) the tab when the close button is clicked
     tabs = tabs.filter((tab) => tab.id !== event.id);
     const getTabWindowId = Number(getTab.text.charAt(getTab.text.length - 1));
-    console.log(getTabWindowId);
     tabWindowIds = tabWindowIds.filter(
       (tabWindowId) => tabWindowId !== getTabWindowId
     );
@@ -160,27 +131,47 @@ ext.windows.onClosed.addListener(async (event) => {
     );
     await ext.tabs.remove(getTab.id);
   }
-  console.log(tabWindowIds);
 });
 
 ext.windows.onUpdatedDarkMode.addListener(async (event, details) => {
-  console.log('theme changes: ', event, details);
   const getWebview = (await ext.webviews.query()).find(
     (webview) => webview.id === event.id
   ) as ext.webviews.Webview;
   const getWindow = (await ext.windows.query()).find(
-    (webview) => webview.id === event.id
+    (window) => window.id === event.id
   ) as ext.windows.Window;
   if (details.enabled) {
-    await ext.windows.setIcon(getWindow.id, 'icons/icon-1024.png');
+    await ext.windows.setIcon(getWindow.id, 'icons/icon-128-dark.png');
     await ext.webviews.executeJavaScript(
       getWebview.id,
       `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
     );
   } else {
-    await ext.windows.setIcon(getWindow.id, 'icons/icon-128-dark.png');
+    await ext.windows.setIcon(getWindow.id, 'icons/icon-1024.png');
     await ext.webviews.executeJavaScript(
       getWebview.id,
+      `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
+    );
+  }
+});
+
+ext.webviews.onCreated.addListener(async (event, details) => {
+  const isDarkMode = await ext.windows.getPlatformDarkMode();
+  console.log('webview created: ', event, details);
+  console.log(isDarkMode);
+  const getWindow = (await ext.windows.query()).find(
+    (window) => window.id === event.id
+  ) as ext.windows.Window;
+  if (isDarkMode) {
+    await ext.windows.setIcon(getWindow.id, 'icons/icon-1024.png');
+    await ext.webviews.executeJavaScript(
+      details.id,
+      `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
+    );
+  } else {
+    await ext.windows.setIcon(getWindow.id, 'icons/icon-128-dark.png');
+    await ext.webviews.executeJavaScript(
+      details.id,
       `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
     );
   }
