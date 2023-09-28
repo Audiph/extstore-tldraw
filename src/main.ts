@@ -125,6 +125,22 @@ ext.windows.onClosed.addListener(async (event) => {
   }
 });
 
+ext.webviews.onPageTitleUpdated.addListener(async (event, details) => {
+  const getWindow = getItem(windows, event) as ext.windows.Window;
+  const getTab = getItem(tabs, event) as ext.tabs.Tab;
+  if (getWindow && getWindow.id) {
+    await ext.windows.setTitle(
+      getWindow.id,
+      `${details.title} #${getWindow.title.charAt(getWindow.title.length - 1)}`
+    );
+  }
+  if (getTab && getTab.id) {
+    await ext.tabs.update(getTab.id, {
+      text: `${details.title} #${getTab.text.charAt(getTab.text.length - 1)}`,
+    });
+  }
+});
+
 ext.windows.onUpdatedDarkMode.addListener(async (event, details) => {
   const getWebview = (await ext.webviews.query()).find(
     (webview) => webview.id === event.id
@@ -133,17 +149,4 @@ ext.windows.onUpdatedDarkMode.addListener(async (event, details) => {
     (window) => window.id === event.id
   ) as ext.windows.Window;
   changeTLDrawTheme(details.enabled, getWindow, getWebview);
-});
-
-ext.webviews.onLoadFinished.addListener(async (event) => {
-  const isDarkMode = await ext.windows.getPlatformDarkMode();
-  const getWebview = (await ext.webviews.query()).find(
-    (webview) => webview.id === event.id
-  ) as ext.webviews.Webview;
-  console.log('webview created: ', event);
-  const getWindow = (await ext.windows.query()).find(
-    (window) => window.id === event.id
-  ) as ext.windows.Window;
-  await ext.webviews.startPainting(getWebview.id);
-  changeTLDrawTheme(isDarkMode, getWindow, getWebview);
 });
