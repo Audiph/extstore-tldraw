@@ -1,4 +1,4 @@
-import { changeTLDrawTheme, findMissing, getItem } from './utils';
+import { changeTLDrawTheme, findMissingId, getItem } from './common/utils';
 
 let tabWindowIds: Array<number> = [];
 let tabs: ext.tabs.Tab[] = [];
@@ -6,9 +6,11 @@ let windows: ext.windows.Window[] = [];
 let webview: ext.webviews.Webview | null = null;
 let websession: ext.websessions.Websession | null = null;
 
+// setup runtime whenever user clicks TLDraw extension
 ext.runtime.onExtensionClick.addListener(async () => {
+  // create new tab
   const newTab = await ext.tabs.create({
-    text: `TLDraw #${findMissing(tabWindowIds, tabWindowIds.length)}`,
+    text: `TLDraw #${findMissingId(tabWindowIds, tabWindowIds.length)}`,
     icon: 'icons/icon-1024.png',
     icon_dark: 'icons/icon-128-dark.png',
     muted: true,
@@ -16,17 +18,20 @@ ext.runtime.onExtensionClick.addListener(async () => {
     closable: true,
   });
 
+  // create new window
   const newWindow = await ext.windows.create({
     title: newTab.text,
     icon: 'icons/icon-1024.png',
+    // setting this for better UX
     minHeight: 530,
     minWidth: 600,
   });
 
-  tabWindowIds.push(findMissing(tabWindowIds, tabWindowIds.length));
+  tabWindowIds.push(findMissingId(tabWindowIds, tabWindowIds.length));
   const newWindowSize = await ext.windows.getContentSize(newWindow.id);
 
   if (websession) {
+    // Supposedly reusing websession so that the data persist but apparently it's not working
     webview = await ext.webviews.create({
       window: newWindow,
       websession: websession,
@@ -45,6 +50,7 @@ ext.runtime.onExtensionClick.addListener(async () => {
     return;
   }
 
+  // create new session
   websession = await ext.websessions.create({
     partition: 'TLDraw Extension',
     persistent: true,
@@ -52,6 +58,7 @@ ext.runtime.onExtensionClick.addListener(async () => {
     cache: true,
   });
 
+  // create new webview
   webview = await ext.webviews.create({
     window: newWindow,
     websession: websession,
@@ -65,6 +72,7 @@ ext.runtime.onExtensionClick.addListener(async () => {
     javascript: true,
   });
 
+  // Trying to setup Cookies and attach it for the websession if ever it's going to work. But, it's not :<
   await ext.websessions.setUserAgent(websession.id, `Agent #${websession.id}`);
   const getUser = await ext.websessions.getUserAgent(websession.id);
 
@@ -78,9 +86,11 @@ ext.runtime.onExtensionClick.addListener(async () => {
   tabs.push(newTab);
   windows.push(newWindow);
 
+  // attach/load our html file to the window
   await ext.webviews.loadFile(webview.id, 'index.html');
 });
 
+// Event handler when user closes a tab
 ext.tabs.onClickedClose.addListener(async (event) => {
   const getTab = getItem(tabs, event) as ext.tabs.Tab;
   const getWindow = getItem(windows, event) as ext.windows.Window;
@@ -103,6 +113,7 @@ ext.tabs.onClickedClose.addListener(async (event) => {
   }
 });
 
+// Event handler when user clicks a tab
 ext.tabs.onClicked.addListener(async (event) => {
   const getWindow = getItem(windows, event) as ext.windows.Window;
   if (getWindow && getWindow.id) {
@@ -125,6 +136,7 @@ ext.windows.onClosed.addListener(async (event) => {
   }
 });
 
+// Event handler when webview page redirects to other link
 ext.webviews.onPageTitleUpdated.addListener(async (event, details) => {
   const getWindow = getItem(windows, event) as ext.windows.Window;
   const getTab = getItem(tabs, event) as ext.tabs.Tab;
@@ -141,6 +153,7 @@ ext.webviews.onPageTitleUpdated.addListener(async (event, details) => {
   }
 });
 
+// Event handler when user changes from dark to light mode or vice versa in EXT appearance settings
 ext.windows.onUpdatedDarkMode.addListener(async (event, details) => {
   const getWebview = (await ext.webviews.query()).find(
     (webview) => webview.id === event.id

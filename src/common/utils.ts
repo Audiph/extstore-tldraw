@@ -1,3 +1,7 @@
+/** Gets item needed to be used
+ *  @param items Array of Objects to choose from
+ *  @param target item to get
+ */
 export const getItem = (
   items: ext.tabs.Tab[] | ext.windows.Window[],
   target: ext.tabs.TabEvent | ext.windows.WindowEvent
@@ -5,33 +9,46 @@ export const getItem = (
   return items.find((item) => item.id === target.id);
 };
 
-export const findMissing = (a: Array<number>, n: number): number => {
-  let total = Math.floor(((n + 1) * (n + 2)) / 2);
-  for (let i = 0; i < n; i++) total -= a[i];
+/** function to find missing ID from order
+ *  @param array array of ordered Window/Tab IDs
+ *  @param N the array length
+ */
+export const findMissingId = (array: Array<number>, N: number): number => {
+  let total = Math.floor(((N + 1) * (N + 2)) / 2);
+  for (let i = 0; i < N; i++) total -= array[i];
   return total;
 };
 
+/** Sets Theme appearance whenever user changes it from EXT settings
+ *  @param isDarkMode getting its value from onUpdatedDarkMode handler
+ *  @param window window to be changed
+ *  @param webview webview to be changed
+ */
 export const changeTLDrawTheme = async (
   isDarkMode: boolean,
   window: ext.windows.Window,
   webview: ext.webviews.Webview
 ): Promise<void> => {
-  console.log(isDarkMode);
   if (isDarkMode) {
-    console.log('dark mode on');
+    // setup icon and theme to dark if isDarkMode is true
     await ext.windows.setIcon(window.id, 'icons/icon-128-dark.png');
     await ext.webviews.executeJavaScript(
       webview.id,
       `document.querySelector('.tl-container').className = 'tl-container tl-theme__dark'`
     );
   } else {
-    console.log('dark mode off');
+    // setup icon and theme to light if isDarkMode is false
     await ext.windows.setIcon(window.id, 'icons/icon-1024.png');
     await ext.webviews.executeJavaScript(
       webview.id,
       `document.querySelector('.tl-container').className = 'tl-container tl-theme__light'`
     );
   }
+  /**
+   * Since the initial open of window is not working, setting it up here will work.
+   * Whenever onUpdatedDarkMode runs, button menus will update and EXT-branding button will be added
+   * @param extButton button id that's been setup so we can add an event listener to redirect to ext.store whenever clicked
+   */
   await ext.webviews.executeJavaScript(
     webview.id,
     `
